@@ -72,7 +72,7 @@ $stats = $conn->query("
 <div class="app-layout">
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="images.png" class="sidebar-logo" alt="Logo">
+            <img src="CCSlogo.png" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
             <h3>Admin Panel</h3>
         </div>
 
@@ -104,6 +104,14 @@ $stats = $conn->query("
             <form method="POST" action="update_settings.php" class="search-form">
                 <input type="number" name="sitin_time_limit_minutes" value="<?php echo (int)$settings['sitin_time_limit_minutes']; ?>" min="1" required>
                 <button type="submit" class="btn-primary">Update Time Limit</button>
+            </form>
+        </div>
+
+        <div class="glass-card">
+            <h2>Student Announcement</h2>
+            <form method="POST" action="update_announcement.php" class="search-form">
+                <textarea name="announcement" rows="4" placeholder="Enter announcement for all students"><?php echo htmlspecialchars($announcement); ?></textarea>
+                <button type="submit" class="btn-primary">Save Announcement</button>
             </form>
         </div>
 
@@ -234,5 +242,6 @@ $stats = $conn->query("
         </div>
     </main>
 </div>
+    <script src="script.js"></script>
 </body>
 </html>

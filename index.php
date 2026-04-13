@@ -18,7 +18,7 @@ session_start();
 
     <div class="nav-links">
         <a onclick="showHome()">Home</a>
-        <a href="reports.php">Reports</a>
+        <a href="reports.php">Community</a>
 
         <?php if (isset($_SESSION['student_id'])): ?>
             <?php if ($_SESSION['role'] === 'admin'): ?>
@@ -42,7 +42,7 @@ session_start();
     <div class="message error-msg"><?php echo htmlspecialchars($_GET['error']); ?></div>
 <?php endif; ?>
 
-<section id="homeSection" class="hero">
+<section id="homeSection" class="hero fade-section">
     <h1>Welcome to the Future of Laboratory Monitoring</h1>
     <p>
         Empowering CCS students with a fast, secure, and intelligent Sit-In Monitoring System.
@@ -56,7 +56,7 @@ session_start();
     </p>
 </section>
 
-<section id="registerSection" class="hidden">
+<section id="registerSection" class="hidden fade-section">
     <div class="register-container">
         <div class="register-image">
             <img src="registerGift.gif" alt="Register">
@@ -67,56 +67,71 @@ session_start();
             <h2>Sign Up</h2>
 
             <form action="register.php" method="POST">
-                <input type="text" name="student_id" placeholder="ID Number" required>
+                <input type="number" name="student_id" placeholder="ID Number" step="1" min="0" required>
                 <input type="text" name="last_name" placeholder="Last Name" required>
                 <input type="text" name="first_name" placeholder="First Name" required>
                 <input type="text" name="middle_name" placeholder="Middle Name">
-                <input type="text" name="course_level" placeholder="Course Level">
+                <select name="course_level" required>
+                    <option value="">Select Course Level</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                </select>
                 <input type="password" name="password" placeholder="Password" required>
                 <input type="password" name="repeat_password" placeholder="Repeat Password" required>
                 <input type="email" name="email" placeholder="Email">
+
                 <select name="course" required>
-    <option value="">Select Course</option>
+                    <option value="">Select Course</option>
 
-    <!-- IT / Computer Courses -->
-    <option value="BS CS">BS CS (BACHELOR OF SCIENCE IN COMPUTER SCIENCE)</option>
-    <option value="BS IT">BS IT (BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY)</option>
-    <option value="BS CIS">BS CIS (BACHELOR OF SCIENCE IN COMPUTER INFORMATION SYSTEMS)</option>
-    <option value="BSED InfoTech">BSED InfoTech (BACHELOR OF SECONDARY EDUCATION IN INFORMATION TECHNOLOGY)</option>
+                    <optgroup label="IT / Computer Courses">
+                        <option value="BS CS">BS CS (BACHELOR OF SCIENCE IN COMPUTER SCIENCE)</option>
+                        <option value="BS IT">BS IT (BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY)</option>
+                        <option value="BS CIS">BS CIS (BACHELOR OF SCIENCE IN COMPUTER INFORMATION SYSTEMS)</option>
+                        <option value="BSED InfoTech">BSED InfoTech</option>
+                    </optgroup>
 
-    <!-- Engineering -->
-    <option value="BSCE">BSCE (BACHELOR OF SCIENCE IN CIVIL ENGINEERING)</option>
-    <option value="BSEE">BSEE (BACHELOR OF SCIENCE IN ELECTRICAL ENGINEERING)</option>
-    <option value="BSME">BSME (BACHELOR OF SCIENCE IN MECHANICAL ENGINEERING)</option>
-    <option value="BSECE">BSECE (BACHELOR OF SCIENCE IN ELECTRONICS ENGINEERING)</option>
+                    <optgroup label="Engineering">
+                        <option value="BSCE">BSCE</option>
+                        <option value="BSEE">BSEE</option>
+                        <option value="BSME">BSME</option>
+                        <option value="BSECE">BSECE</option>
+                    </optgroup>
 
-    <!-- Business -->
-    <option value="BSBA">BSBA (BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION)</option>
-    <option value="BSA">BSA (BACHELOR OF SCIENCE IN ACCOUNTANCY)</option>
-    <option value="BSMA">BSMA (BACHELOR OF SCIENCE IN MANAGEMENT ACCOUNTING)</option>
-    <option value="BSHM">BSHM (BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT)</option>
-    <option value="BSTM">BSTM (BACHELOR OF SCIENCE IN TOURISM MANAGEMENT)</option>
+                    <optgroup label="Business">
+                        <option value="BSBA">BSBA</option>
+                        <option value="BSA">BSA</option>
+                        <option value="BSMA">BSMA</option>
+                        <option value="BSHM">BSHM</option>
+                        <option value="BSTM">BSTM</option>
+                    </optgroup>
 
-    <!-- Education -->
-    <option value="BEED">BEED (BACHELOR OF ELEMENTARY EDUCATION)</option>
-    <option value="BSED English">BSED English (BACHELOR OF SECONDARY EDUCATION MAJOR IN ENGLISH)</option>
-    <option value="BSED Math">BSED Math (BACHELOR OF SECONDARY EDUCATION MAJOR IN MATHEMATICS)</option>
+                    <optgroup label="Education">
+                        <option value="BEED">BEED</option>
+                        <option value="BSED English">BSED English</option>
+                        <option value="BSED Math">BSED Math</option>
+                    </optgroup>
 
-    <!-- Health / Science -->
-    <option value="BSN">BSN (BACHELOR OF SCIENCE IN NURSING)</option>
-    <option value="BSMLS">BSMLS (BACHELOR OF SCIENCE IN MEDICAL LABORATORY SCIENCE)</option>
-    <option value="BSPH">BSPH (BACHELOR OF SCIENCE IN PUBLIC HEALTH)</option>
-    <option value="BSBio">BSBio (BACHELOR OF SCIENCE IN BIOLOGY)</option>
+                    <optgroup label="Health / Science">
+                        <option value="BSN">BSN</option>
+                        <option value="BSMLS">BSMLS</option>
+                        <option value="BSPH">BSPH</option>
+                        <option value="BSBio">BSBio</option>
+                    </optgroup>
 
-    <!-- Arts & Social Sciences -->
-    <option value="BA Comm">BA Comm (BACHELOR OF ARTS IN COMMUNICATION)</option>
-    <option value="BA Psych">BA Psych (BACHELOR OF ARTS IN PSYCHOLOGY)</option>
-    <option value="BS Psych">BS Psych (BACHELOR OF SCIENCE IN PSYCHOLOGY)</option>
-    <option value="BA PolSci">BA PolSci (BACHELOR OF ARTS IN POLITICAL SCIENCE)</option>
+                    <optgroup label="Arts & Social Sciences">
+                        <option value="BA Comm">BA Comm</option>
+                        <option value="BA Psych">BA Psych</option>
+                        <option value="BS Psych">BS Psych</option>
+                        <option value="BA PolSci">BA PolSci</option>
+                    </optgroup>
 
-    <!-- Criminology -->
-    <option value="BS Crim">BS Crim (BACHELOR OF SCIENCE IN CRIMINOLOGY)</option>
-</select>
+                    <optgroup label="Criminology">
+                        <option value="BS Crim">BS Crim</option>
+                    </optgroup>
+                </select>
+
                 <input type="text" name="address" placeholder="Address">
                 <button type="submit" class="btn-primary">Register</button>
             </form>
@@ -124,17 +139,36 @@ session_start();
     </div>
 </section>
 
-<section id="loginSection" class="hidden">
-    <div class="register-container">
-        <div class="register-form">
-            <span class="back-btn" onclick="showHome()">← Back</span>
-            <h2>Log In</h2>
+<section id="loginSection" class="hidden fade-section">
+    <div class="login-wrapper">
+        <div class="login-card">
 
-            <form action="login.php" method="POST">
-                <input type="text" name="student_id" placeholder="ID Number" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <button type="submit" class="btn-primary">Log In</button>
-            </form>
+            <span class="back-btn" onclick="showHome()">← Back</span>
+
+            <div class="login-content">
+
+                <!-- LEFT: FORM -->
+                <div class="login-text-side">
+                    <h2>Welcome Back</h2>
+                    <p>Log in to continue to the CCS Sit-In Monitoring System</p>
+
+                    <form action="login.php" method="POST">
+                        <input type="text" name="student_id" placeholder="ID Number" inputmode="numeric" required>
+                        <input type="password" name="password" placeholder="Password" required>
+
+                        <button type="submit" class="btn-primary login-submit">
+                            Log In
+                        </button>
+                        <p class="forgot-password"><a href="forgot_password.php" onclick="pageTransition('forgot_password.php'); return false;">Forgot password?</a></p>
+                    </form>
+                </div>
+
+                <!-- RIGHT: GIF -->
+                <div class="login-gif-side">
+                    <img src="Luffy1.gif" alt="Login GIF">
+                </div>
+
+            </div>
         </div>
     </div>
 </section>

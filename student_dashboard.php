@@ -75,7 +75,7 @@ $summary = $conn->query("
 <div class="app-layout">
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="images.png" class="sidebar-logo" alt="Logo">
+            <img src="CCSlogo.png" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
             <h3>Student Panel</h3>
         </div>
 
@@ -99,6 +99,16 @@ $summary = $conn->query("
             <div class="message error-msg"><?php echo htmlspecialchars($_GET['error']); ?></div>
         <?php endif; ?>
 
+        <?php
+        $announcement_text = '';
+        if (file_exists('announcements.txt')) {
+            $announcement_text = trim(file_get_contents('announcements.txt'));
+        }
+        ?>
+        <?php if ($announcement_text !== ''): ?>
+            <div class="announcement-banner"><?php echo nl2br(htmlspecialchars($announcement_text)); ?></div>
+        <?php endif; ?>
+
         <div class="stats-grid">
             <div class="stat-card"><h3>Total</h3><p><?php echo (int)$summary['total_records']; ?></p></div>
             <div class="stat-card"><h3>Pending</h3><p><?php echo (int)$summary['pending_count']; ?></p></div>
@@ -111,15 +121,21 @@ $summary = $conn->query("
             <h2>Student Profile</h2>
             <div class="profile-layout">
                 <div class="profile-photo-box">
-                    <?php if (!empty($user['photo']) && file_exists($user['photo'])): ?>
+                    <?php if (!empty($user['photo'])): ?>
                         <img src="<?php echo htmlspecialchars($user['photo']); ?>" class="profile-photo" alt="Profile Photo">
                     <?php else: ?>
                         <div class="profile-photo empty-photo">No Photo</div>
                     <?php endif; ?>
 
                     <form action="upload_photo.php" method="POST" enctype="multipart/form-data">
-                        <input type="file" name="photo" accept="image/*" required>
-                        <button type="submit" class="btn-primary">Upload Photo</button>
+                        <?php if (empty($user['photo'])): ?>
+                            <input type="file" name="photo" required>
+                            <br><br>
+                            <button type="submit" class="btn-primary">Upload Photo</button>
+                        <?php else: ?>
+                            <label for="changePhoto" class="btn-primary change-photo-btn">Change Photo</label>
+                            <input type="file" name="photo" id="changePhoto" class="hidden-file-input" onchange="this.form.submit()">
+                        <?php endif; ?>
                     </form>
                 </div>
 

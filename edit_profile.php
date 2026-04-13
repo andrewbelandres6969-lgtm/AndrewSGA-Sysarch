@@ -44,7 +44,7 @@ $user = $stmt->get_result()->fetch_assoc();
 <div class="app-layout">
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="images.png" class="sidebar-logo" alt="Logo">
+            <img src="CCSlogo.png" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
             <h3>Student Panel</h3>
         </div>
         <a href="student_dashboard.php" class="side-link">Dashboard</a>
@@ -63,16 +63,28 @@ $user = $stmt->get_result()->fetch_assoc();
 
         <div class="glass-card form-card">
             <h2>Edit My Profile</h2>
-            <form method="POST">
-                <input type="text" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
-                <input type="text" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
-                <input type="text" name="middle_name" value="<?php echo htmlspecialchars($user['middle_name']); ?>">
-                <input type="text" name="course" value="<?php echo htmlspecialchars($user['course']); ?>">
-                <input type="text" name="course_level" value="<?php echo htmlspecialchars($user['course_level']); ?>">
-                <input type="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>">
-                <input type="text" name="address" value="<?php echo htmlspecialchars($user['address']); ?>">
-                <button type="submit" class="btn-primary">Save Changes</button>
-            </form>
+            <div class="edit-profile-grid">
+                <form method="POST" class="edit-profile-form">
+                    <input type="text" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
+                    <input type="text" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
+                    <input type="text" name="middle_name" value="<?php echo htmlspecialchars($user['middle_name']); ?>">
+                    <input type="text" name="course" value="<?php echo htmlspecialchars($user['course']); ?>">
+                    <select name="course_level" required>
+                        <option value="">Select Course Level</option>
+                        <option value="1" <?php echo ($user['course_level'] === '1') ? 'selected' : ''; ?>>1</option>
+                        <option value="2" <?php echo ($user['course_level'] === '2') ? 'selected' : ''; ?>>2</option>
+                        <option value="3" <?php echo ($user['course_level'] === '3') ? 'selected' : ''; ?>>3</option>
+                        <option value="4" <?php echo ($user['course_level'] === '4') ? 'selected' : ''; ?>>4</option>
+                    </select>
+                    <input type="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>">
+                    <input type="text" name="address" value="<?php echo htmlspecialchars($user['address']); ?>">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </form>
+
+                <div class="edit-profile-image">
+                    <img src="Luffy.png" alt="Profile Image">
+                </div>
+            </div>
         </div>
     </main>
 </div>
