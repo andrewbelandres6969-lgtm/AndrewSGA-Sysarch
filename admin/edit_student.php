@@ -1,15 +1,10 @@
 <?php
-session_start();
-include "config.php";
+require_once "../includes/app.php";
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: index.php?error=Please log in as admin");
-    exit();
-}
+require_role('admin');
 
 if (!isset($_GET['id']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: admin_dashboard.php?error=Missing student id");
-    exit();
+    redirect_with_message('admin/admin_dashboard.php', 'error', 'Missing student id');
 }
 
 $student_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -58,26 +53,26 @@ $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 
 if (!$student) {
-    header("Location: admin_dashboard.php?error=Student not found");
-    exit();
+    redirect_with_message('admin/admin_dashboard.php', 'error', 'Student not found');
 }
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Edit Student</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="<?php echo asset_url('Styles/style.css'); ?>">
 </head>
 <body>
     <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <img src="CCSlogo.png" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
+                <img src="<?php echo asset_url('Images/CCSlogo.png'); ?>" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
                 <h3>Admin Panel</h3>
             </div>
-            <a href="admin_dashboard.php" class="side-link">Dashboard</a>
-            <a href="reports.php" class="side-link">Reports</a>
-            <a href="logout.php" class="side-link">Logout</a>
+            <a href="<?php echo app_url('admin/admin_dashboard.php'); ?>" class="side-link">Dashboard</a>
+            <a href="<?php echo app_url('admin/announcements.php'); ?>" class="side-link">Announcements</a>
+            <a href="<?php echo app_url('reports.php'); ?>" class="side-link">Reports</a>
+            <a href="<?php echo app_url('auth/logout.php'); ?>" class="side-link">Logout</a>
         </aside>
         <main class="main-content">
             <?php if ($success): ?>
@@ -103,7 +98,7 @@ if (!$student) {
                     <input type="password" name="password" placeholder="New Password (leave blank to keep current)">
                     <input type="password" name="confirm_password" placeholder="Confirm Password">
                     <button type="submit" class="btn-primary">Save Changes</button>
-                    <a href="admin_dashboard.php" class="btn-secondary">Back to Dashboard</a>
+                    <a href="<?php echo app_url('admin/admin_dashboard.php'); ?>" class="btn-secondary">Back to Dashboard</a>
                 </form>
             </div>
         </main>

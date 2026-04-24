@@ -1,32 +1,32 @@
 <?php
-session_start();
+require_once "includes/app.php";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>CCS Sit-In Monitoring System</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="<?php echo asset_url('Styles/style.css'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
 <nav class="navbar">
     <div class="logo-section">
-        <img src="CCSlogo.png" class="logo" alt="Logo">
+        <img src="<?php echo asset_url('Images/CCS Logo.png'); ?>" class="logo" alt="Logo">
         <h2>College of Computer Studies Sit-In Monitoring System</h2>
     </div>
 
     <div class="nav-links">
         <a onclick="showHome()">Home</a>
-        <a href="reports.php">Community</a>
+        <a href="<?php echo app_url('reports.php'); ?>">Community</a>
 
         <?php if (isset($_SESSION['student_id'])): ?>
             <?php if ($_SESSION['role'] === 'admin'): ?>
-                <a href="admin_dashboard.php">Admin Panel</a>
+                <a href="<?php echo app_url('admin/admin_dashboard.php'); ?>">Admin Panel</a>
             <?php else: ?>
-                <a href="student_dashboard.php">Dashboard</a>
+                <a href="<?php echo app_url('student/student_dashboard.php'); ?>">Dashboard</a>
             <?php endif; ?>
-            <a href="logout.php">Logout</a>
+            <a href="<?php echo app_url('auth/logout.php'); ?>">Logout</a>
         <?php else: ?>
             <a onclick="showLogin()">Log In</a>
             <a class="register-btn" onclick="showRegister()">Register</a>
@@ -59,14 +59,14 @@ session_start();
 <section id="registerSection" class="hidden fade-section">
     <div class="register-container">
         <div class="register-image">
-            <img src="registerGift.gif" alt="Register">
+            <img src="<?php echo asset_url('Images/RegisterGift.gif'); ?>" alt="Register">
         </div>
 
         <div class="register-form">
-            <span class="back-btn" onclick="showHome()">← Back</span>
+            <span class="back-btn" onclick="showHome()">â† Back</span>
             <h2>Sign Up</h2>
 
-            <form action="register.php" method="POST">
+            <form action="<?php echo app_url('auth/register.php'); ?>" method="POST">
                 <input type="number" name="student_id" placeholder="ID Number" step="1" min="0" required>
                 <input type="text" name="last_name" placeholder="Last Name" required>
                 <input type="text" name="first_name" placeholder="First Name" required>
@@ -143,37 +143,33 @@ session_start();
     <div class="login-wrapper">
         <div class="login-card">
 
-            <span class="back-btn" onclick="showHome()">← Back</span>
+            <span class="back-btn" onclick="showHome()">â† Back</span>
 
             <div class="login-content">
-
-                <!-- LEFT: FORM -->
                 <div class="login-text-side">
                     <h2>Welcome Back</h2>
                     <p>Log in to continue to the CCS Sit-In Monitoring System</p>
 
-                    <form action="login.php" method="POST">
+                    <form action="<?php echo app_url('auth/login.php'); ?>" method="POST">
                         <input type="text" name="student_id" placeholder="ID Number" inputmode="numeric" required>
                         <input type="password" name="password" placeholder="Password" required>
 
                         <button type="submit" class="btn-primary login-submit">
                             Log In
                         </button>
-                        <p class="forgot-password"><a href="forgot_password.php" onclick="pageTransition('forgot_password.php'); return false;">Forgot password?</a></p>
+                        <p class="forgot-password"><a href="<?php echo app_url('auth/forgot_password.php'); ?>" onclick="pageTransition('<?php echo app_url('auth/forgot_password.php'); ?>'); return false;">Forgot password?</a></p>
                     </form>
                 </div>
 
-                <!-- RIGHT: GIF -->
                 <div class="login-gif-side">
-                    <img src="Luffy1.gif" alt="Login GIF">
+                    <img src="<?php echo asset_url('Images/Luffy1.gif'); ?>" alt="Login GIF">
                 </div>
-
             </div>
         </div>
     </div>
 </section>
 
-<script src="script.js"></script>
+<script src="<?php echo asset_url('Scripts/script.js'); ?>"></script>
 
 <?php
 if (isset($_GET['show']) && $_GET['show'] === 'register') {

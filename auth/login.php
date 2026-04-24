@@ -1,6 +1,5 @@
 <?php
-session_start();
-include "config.php";
+require_once "../includes/app.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $student_id = trim($_POST['student_id']);
@@ -21,18 +20,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
 
             if ($user['role'] === 'admin') {
-                header("Location: admin_dashboard.php");
+                header("Location: " . app_url('admin/admin_dashboard.php'));
             } else {
-                header("Location: student_dashboard.php");
+                header("Location: " . app_url('student/student_dashboard.php'));
             }
             exit();
-        } else {
-            header("Location: index.php?show=login&error=Invalid password");
-            exit();
         }
-    } else {
-        header("Location: index.php?show=login&error=Student ID not found");
-        exit();
+
+        redirect_with_message_preserving_query('index.php', 'error', 'Invalid password', ['show' => 'login']);
     }
+
+    redirect_with_message_preserving_query('index.php', 'error', 'Student ID not found', ['show' => 'login']);
 }
 ?>

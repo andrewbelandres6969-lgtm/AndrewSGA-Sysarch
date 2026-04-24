@@ -2,7 +2,7 @@
 $host = "localhost";
 $username = "root";
 $password = "";
-$database = "sitin_monitoring";
+$database = "sit_in_system_clean";
 
 $conn = new mysqli($host, $username, $password, $database);
 

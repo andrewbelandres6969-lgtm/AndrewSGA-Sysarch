@@ -1,11 +1,7 @@
 <?php
-session_start();
-include "config.php";
+require_once "../includes/app.php";
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: index.php?error=Unauthorized");
-    exit();
-}
+require_role('student');
 
 $user_id = $_SESSION['user_id'];
 
@@ -22,11 +18,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("sssssssi", $first_name, $last_name, $middle_name, $course, $course_level, $email, $address, $user_id);
 
     if ($stmt->execute()) {
-        header("Location: edit_profile.php?success=Profile updated successfully");
-    } else {
-        header("Location: edit_profile.php?error=Failed to update profile");
+        redirect_with_message('student/edit_profile.php', 'success', 'Profile updated successfully');
     }
-    exit();
+
+    redirect_with_message('student/edit_profile.php', 'error', 'Failed to update profile');
 }
 
 $stmt = $conn->prepare("SELECT * FROM users WHERE id=?");
@@ -38,19 +33,19 @@ $user = $stmt->get_result()->fetch_assoc();
 <html>
 <head>
     <title>Edit Profile</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="<?php echo asset_url('Styles/style.css'); ?>">
 </head>
 <body>
 <div class="app-layout">
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="CCSlogo.png" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
+            <img src="<?php echo asset_url('Images/CCSlogo.png'); ?>" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
             <h3>Student Panel</h3>
         </div>
-        <a href="student_dashboard.php" class="side-link">Dashboard</a>
-        <a href="edit_profile.php" class="side-link active">Edit Profile</a>
-        <a href="reports.php" class="side-link">Reports</a>
-        <a href="logout.php" class="side-link">Logout</a>
+        <a href="<?php echo app_url('student/student_dashboard.php'); ?>" class="side-link">Dashboard</a>
+        <a href="<?php echo app_url('student/edit_profile.php'); ?>" class="side-link active">Edit Profile</a>
+        <a href="<?php echo app_url('reports.php'); ?>" class="side-link">Reports</a>
+        <a href="<?php echo app_url('auth/logout.php'); ?>" class="side-link">Logout</a>
     </aside>
 
     <main class="main-content">
@@ -82,7 +77,7 @@ $user = $stmt->get_result()->fetch_assoc();
                 </form>
 
                 <div class="edit-profile-image">
-                    <img src="Luffy.png" alt="Profile Image">
+                    <img src="<?php echo asset_url('Images/Luffy.png'); ?>" alt="Profile Image">
                 </div>
             </div>
         </div>
