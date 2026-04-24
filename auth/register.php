@@ -1,5 +1,5 @@
 <?php
-include "config.php";
+require_once "../includes/app.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $student_id = trim($_POST['student_id']);
@@ -14,8 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $address = trim($_POST['address']);
 
     if ($password !== $repeat_password) {
-        header("Location: index.php?show=register&error=Passwords do not match");
-        exit();
+        redirect_with_message_preserving_query('index.php', 'error', 'Passwords do not match', ['show' => 'register']);
     }
 
     $check = $conn->prepare("SELECT id FROM users WHERE student_id = ?");
@@ -24,8 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $check->store_result();
 
     if ($check->num_rows > 0) {
-        header("Location: index.php?show=register&error=Student ID already exists");
-        exit();
+        redirect_with_message_preserving_query('index.php', 'error', 'Student ID already exists', ['show' => 'register']);
     }
 
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -35,10 +33,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("sssssssss", $student_id, $last_name, $first_name, $middle_name, $course_level, $hashed_password, $email, $course, $address);
 
     if ($stmt->execute()) {
-        header("Location: index.php?show=login&success=Registration successful. Please log in.");
-    } else {
-        header("Location: index.php?show=register&error=Registration failed.");
+        redirect_with_message_preserving_query('index.php', 'success', 'Registration successful. Please log in.', ['show' => 'login']);
     }
-    exit();
+
+    redirect_with_message_preserving_query('index.php', 'error', 'Registration failed.', ['show' => 'register']);
 }
 ?>

@@ -1,17 +1,8 @@
 <?php
-session_start();
-include "config.php";
+require_once "../includes/app.php";
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: index.php?error=Please log in as admin");
-    exit();
-}
-
-$conn->query("
-    UPDATE sitin_records
-    SET status='Expired', time_out=NOW(), remarks=IFNULL(remarks, 'Session expired')
-    WHERE status='Approved' AND time_out IS NULL AND session_end IS NOT NULL AND NOW() > session_end
-");
+require_role('admin');
+expire_overdue_sitin_records($conn);
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $selected_lab = isset($_GET['lab']) ? intval($_GET['lab']) : 0;
@@ -30,7 +21,7 @@ if ($search !== '') {
     $students = $conn->query("SELECT * FROM users WHERE role='student' ORDER BY id DESC");
 }
 
-$settings = $conn->query("SELECT * FROM settings ORDER BY id DESC LIMIT 1")->fetch_assoc();
+$settings = get_latest_settings($conn);
 
 $records = $conn->query("
     SELECT s.*, u.student_id, u.first_name, u.last_name, l.lab_name
@@ -60,25 +51,33 @@ $stats = $conn->query("
         (SELECT COUNT(*) FROM sitin_records WHERE status='Completed') completed_count,
         (SELECT COUNT(*) FROM sitin_records WHERE status='Expired') expired_count
 ")->fetch_assoc();
+
+$feedback_rows = $conn->query("
+    SELECT f.*, u.student_id, u.first_name, u.last_name
+    FROM feedback f
+    INNER JOIN users u ON f.user_id = u.id
+    ORDER BY f.created_at DESC
+");
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="<?php echo asset_url('Styles/style.css'); ?>">
 </head>
 <body>
 
 <div class="app-layout">
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="CCSlogo.png" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
+            <img src="<?php echo asset_url('Images/CCS Logo.png'); ?>" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
             <h3>Admin Panel</h3>
         </div>
 
-        <a href="admin_dashboard.php" class="side-link active">Dashboard</a>
-        <a href="reports.php" class="side-link">Reports</a>
-        <a href="logout.php" class="side-link">Logout</a>
+        <a href="<?php echo app_url('admin/admin_dashboard.php'); ?>" class="side-link active">Dashboard</a>
+        <a href="<?php echo app_url('admin/announcements.php'); ?>" class="side-link">Announcements</a>
+        <a href="<?php echo app_url('reports.php'); ?>" class="side-link">Reports</a>
+        <a href="<?php echo app_url('auth/logout.php'); ?>" class="side-link">Logout</a>
     </aside>
 
     <main class="main-content">
@@ -101,17 +100,9 @@ $stats = $conn->query("
 
         <div class="glass-card">
             <h2>Admin Sit-In Time Limit</h2>
-            <form method="POST" action="update_settings.php" class="search-form">
+            <form method="POST" action="<?php echo app_url('admin/update_settings.php'); ?>" class="search-form">
                 <input type="number" name="sitin_time_limit_minutes" value="<?php echo (int)$settings['sitin_time_limit_minutes']; ?>" min="1" required>
                 <button type="submit" class="btn-primary">Update Time Limit</button>
-            </form>
-        </div>
-
-        <div class="glass-card">
-            <h2>Student Announcement</h2>
-            <form method="POST" action="update_announcement.php" class="search-form">
-                <textarea name="announcement" rows="4" placeholder="Enter announcement for all students"><?php echo htmlspecialchars($announcement); ?></textarea>
-                <button type="submit" class="btn-primary">Save Announcement</button>
             </form>
         </div>
 
@@ -145,8 +136,8 @@ $stats = $conn->query("
                             <td><?php echo htmlspecialchars($student['email']); ?></td>
                             <td><?php echo (int)$student['sitin_remaining']; ?></td>
                             <td>
-                                <a class="action-btn edit-btn" href="edit_student.php?id=<?php echo $student['id']; ?>">Edit</a>
-                                <a class="action-btn delete-btn" href="delete_student.php?id=<?php echo $student['id']; ?>" onclick="return confirm('Delete this student?')">Delete</a>
+                                <a class="action-btn edit-btn" href="<?php echo app_url('admin/edit_student.php?id=' . $student['id']); ?>">Edit</a>
+                                <a class="action-btn delete-btn" href="<?php echo app_url('admin/delete_student.php?id=' . $student['id']); ?>" onclick="return confirm('Delete this student?')">Delete</a>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -183,7 +174,7 @@ $stats = $conn->query("
                             <td><?php echo htmlspecialchars($record['remarks'] ?: '-'); ?></td>
                             <td>
                                 <?php if ($record['status'] === 'Pending'): ?>
-                                    <form action="approve_reject_sitin.php" method="POST" class="inline-form">
+                                    <form action="<?php echo app_url('admin/approve_reject_sitin.php'); ?>" method="POST" class="inline-form">
                                         <input type="hidden" name="id" value="<?php echo $record['id']; ?>">
                                         <input type="text" name="computer_number" placeholder="PC No." required>
                                         <input type="text" name="remarks" placeholder="Admin remarks" required>
@@ -191,7 +182,7 @@ $stats = $conn->query("
                                         <button type="submit" name="action" value="reject" class="btn-danger btn-small">Reject</button>
                                     </form>
                                 <?php elseif ($record['status'] === 'Approved' && empty($record['time_out'])): ?>
-                                    <form action="approve_reject_sitin.php" method="POST" class="inline-form">
+                                    <form action="<?php echo app_url('admin/approve_reject_sitin.php'); ?>" method="POST" class="inline-form">
                                         <input type="hidden" name="id" value="<?php echo $record['id']; ?>">
                                         <input type="text" name="remarks" placeholder="Completion remarks">
                                         <button type="submit" name="action" value="complete" class="btn-primary btn-small">Complete</button>
@@ -240,8 +231,39 @@ $stats = $conn->query("
                 </table>
             </div>
         </div>
+
+        <div class="glass-card">
+            <h2>Feedback Reports</h2>
+            <div class="table-wrapper">
+                <table class="feedback-report-table">
+                    <tr>
+                        <th>ID</th>
+                        <th>Student</th>
+                        <th>Category</th>
+                        <th>Message</th>
+                        <th>Submitted At</th>
+                    </tr>
+                    <?php if ($feedback_rows && $feedback_rows->num_rows > 0): ?>
+                        <?php while ($fb = $feedback_rows->fetch_assoc()): ?>
+                            <tr>
+                                <td><?php echo (int)$fb['id']; ?></td>
+                                <td><?php echo htmlspecialchars($fb['student_id'] . ' - ' . $fb['first_name'] . ' ' . $fb['last_name']); ?></td>
+                                <td><?php echo htmlspecialchars($fb['category']); ?></td>
+                                <td><?php echo nl2br(htmlspecialchars($fb['message'])); ?></td>
+                                <td><?php echo htmlspecialchars(date('M d, Y h:i A', strtotime($fb['created_at']))); ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5">No feedback submissions yet.</td>
+                        </tr>
+                    <?php endif; ?>
+                </table>
+            </div>
+        </div>
     </main>
 </div>
-    <script src="script.js"></script>
+
+    <script src="<?php echo asset_url('Scripts/script.js'); ?>"></script>
 </body>
 </html>

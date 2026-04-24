@@ -1,11 +1,7 @@
 <?php
-session_start();
-include "config.php";
+require_once "../includes/app.php";
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: index.php?error=Unauthorized");
-    exit();
-}
+require_role('student');
 
 $id = intval($_GET['id'] ?? 0);
 $user_id = $_SESSION['user_id'];
@@ -19,9 +15,8 @@ $stmt->bind_param("ii", $id, $user_id);
 $stmt->execute();
 
 if ($stmt->affected_rows > 0) {
-    header("Location: student_dashboard.php?success=Time out successful");
-} else {
-    header("Location: student_dashboard.php?error=Unable to time out");
+    redirect_with_message('student/student_dashboard.php', 'success', 'Time out successful');
 }
-exit();
+
+redirect_with_message('student/student_dashboard.php', 'error', 'Unable to time out');
 ?>

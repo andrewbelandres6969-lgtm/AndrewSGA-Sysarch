@@ -1,9 +1,7 @@
 <?php
-session_start();
-include "config.php";
+require_once "../includes/app.php";
 
 $error = "";
-$success = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $student_id = trim($_POST['student_id']);
@@ -28,11 +26,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $update->execute();
 
             if ($update->affected_rows > 0) {
-                header("Location: index.php?show=login&success=Password reset successful. Please log in.");
-                exit();
-            } else {
-                $error = "Unable to update password. Please try again.";
+                redirect_with_message_preserving_query('index.php', 'success', 'Password reset successful. Please log in.', ['show' => 'login']);
             }
+
+            $error = "Unable to update password. Please try again.";
         } else {
             $error = "No account was found with that ID and email.";
         }
@@ -44,13 +41,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html>
 <head>
     <title>Forgot Password | CCS Sit-In Monitoring</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="<?php echo asset_url('Styles/style.css'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <section class="login-wrapper">
         <div class="login-card">
-            <span class="back-btn"><a href="index.php" onclick="pageTransition('index.php'); return false;">← Back to Home</a></span>
+            <span class="back-btn"><a href="<?php echo app_url('index.php'); ?>" onclick="pageTransition('<?php echo app_url('index.php'); ?>'); return false;">â† Back to Home</a></span>
             <div class="login-content">
                 <div class="login-text-side">
                     <h2>Forgot Password</h2>
@@ -60,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <div class="message error-msg"><?php echo htmlspecialchars($error); ?></div>
                     <?php endif; ?>
 
-                    <form action="forgot_password.php" method="POST">
+                    <form action="<?php echo app_url('auth/forgot_password.php'); ?>" method="POST">
                         <input type="text" name="student_id" placeholder="ID Number" inputmode="numeric" required>
                         <input type="email" name="email" placeholder="Registered Email" required>
                         <input type="password" name="password" placeholder="New Password" required>
@@ -70,11 +67,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
 
                 <div class="login-gif-side">
-                    <img src="Luffy1.gif" alt="Forgot Password GIF">
+                    <img src="<?php echo asset_url('Images/Luffy1.gif'); ?>" alt="Forgot Password GIF">
                 </div>
             </div>
         </div>
     </section>
-    <script src="script.js"></script>
+    <script src="<?php echo asset_url('Scripts/script.js'); ?>"></script>
 </body>
 </html>

@@ -1,19 +1,11 @@
 <?php
-session_start();
-include "config.php";
+require_once "../includes/app.php";
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: index.php?error=Please log in as student");
-    exit();
-}
+require_role('student');
 
 $user_id = $_SESSION['user_id'];
 
-$conn->query("
-    UPDATE sitin_records
-    SET status='Expired', time_out=NOW(), remarks=IFNULL(remarks, 'Session expired')
-    WHERE status='Approved' AND time_out IS NULL AND session_end IS NOT NULL AND NOW() > session_end
-");
+expire_overdue_sitin_records($conn);
 
 $user_stmt = $conn->prepare("SELECT * FROM users WHERE id=?");
 $user_stmt->bind_param("i", $user_id);
@@ -68,21 +60,22 @@ $summary = $conn->query("
 <html>
 <head>
     <title>Student Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="<?php echo asset_url('Styles/style.css'); ?>">
 </head>
 <body>
 
 <div class="app-layout">
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="CCSlogo.png" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
+            <img src="<?php echo asset_url('Images/CCSlogo.png'); ?>" class="sidebar-logo" alt="Logo" onerror="this.style.display='none';">
             <h3>Student Panel</h3>
         </div>
 
-        <a href="student_dashboard.php" class="side-link active">Dashboard</a>
-        <a href="edit_profile.php" class="side-link">Edit Profile</a>
-        <a href="reports.php" class="side-link">Reports</a>
-        <a href="logout.php" class="side-link">Logout</a>
+        <a href="<?php echo app_url('student/student_dashboard.php'); ?>" class="side-link active">Dashboard</a>
+        <a href="<?php echo app_url('student/edit_profile.php'); ?>" class="side-link">Edit Profile</a>
+        <a href="<?php echo app_url('reports.php'); ?>" class="side-link">Reports</a>
+        <button type="button" class="side-link side-link-button" onclick="document.getElementById('feedbackModal').classList.remove('hidden'); document.body.classList.add('modal-open');">Feedback</button>
+        <a href="<?php echo app_url('auth/logout.php'); ?>" class="side-link">Logout</a>
     </aside>
 
     <main class="main-content">
@@ -99,14 +92,16 @@ $summary = $conn->query("
             <div class="message error-msg"><?php echo htmlspecialchars($_GET['error']); ?></div>
         <?php endif; ?>
 
-        <?php
-        $announcement_text = '';
-        if (file_exists('announcements.txt')) {
-            $announcement_text = trim(file_get_contents('announcements.txt'));
-        }
-        ?>
-        <?php if ($announcement_text !== ''): ?>
-            <div class="announcement-banner"><?php echo nl2br(htmlspecialchars($announcement_text)); ?></div>
+        <?php $latest_announcement = get_latest_announcement($conn); ?>
+        <?php if ($latest_announcement): ?>
+            <div class="announcement-banner">
+                <div class="announcement-banner-title">Latest Announcement</div>
+                <div class="announcement-banner-meta">
+                    <?php echo htmlspecialchars($latest_announcement['author_name']); ?> |
+                    <?php echo htmlspecialchars(date('M d, Y h:i A', strtotime($latest_announcement['created_at']))); ?>
+                </div>
+                <div><?php echo nl2br(htmlspecialchars($latest_announcement['content'])); ?></div>
+            </div>
         <?php endif; ?>
 
         <div class="stats-grid">
@@ -122,12 +117,12 @@ $summary = $conn->query("
             <div class="profile-layout">
                 <div class="profile-photo-box">
                     <?php if (!empty($user['photo'])): ?>
-                        <img src="<?php echo htmlspecialchars($user['photo']); ?>" class="profile-photo" alt="Profile Photo">
+                        <img src="<?php echo htmlspecialchars(app_url($user['photo'])); ?>" class="profile-photo" alt="Profile Photo">
                     <?php else: ?>
                         <div class="profile-photo empty-photo">No Photo</div>
                     <?php endif; ?>
 
-                    <form action="upload_photo.php" method="POST" enctype="multipart/form-data">
+                    <form action="<?php echo app_url('student/upload_photo.php'); ?>" method="POST" enctype="multipart/form-data">
                         <?php if (empty($user['photo'])): ?>
                             <input type="file" name="photo" required>
                             <br><br>
@@ -158,7 +153,7 @@ $summary = $conn->query("
                 <p><strong>Time In:</strong> <?php echo htmlspecialchars($active_record['time_in']); ?></p>
                 <p><strong>Ends At:</strong> <?php echo htmlspecialchars($active_record['session_end']); ?></p>
                 <p><strong>Remaining Time:</strong> <span id="countdown" data-end="<?php echo htmlspecialchars($active_record['session_end']); ?>">Loading...</span></p>
-                <a class="action-btn edit-btn" href="timeout_sitin.php?id=<?php echo $active_record['id']; ?>">Time Out</a>
+                <a class="action-btn edit-btn" href="<?php echo app_url('student/timeout_sitin.php?id=' . $active_record['id']); ?>">Time Out</a>
             </div>
         <?php endif; ?>
 
@@ -181,7 +176,7 @@ $summary = $conn->query("
 
         <div class="glass-card">
             <h2>Submit Sit-In Request</h2>
-            <form action="save_sitin.php" method="POST">
+            <form action="<?php echo app_url('student/save_sitin.php'); ?>" method="POST">
                 <select name="lab_id" required>
                     <option value="">Select Lab Room</option>
                     <?php
@@ -231,6 +226,37 @@ $summary = $conn->query("
     </main>
 </div>
 
-<script src="script.js"></script>
+<div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this){this.classList.add('hidden');document.body.classList.remove('modal-open');}">
+    <div class="modal-card feedback-modal-card" onclick="event.stopPropagation();">
+        <div class="modal-header">
+            <div>
+                <h2>Send Feedback</h2>
+                <p>We value your thoughts. Share your feedback with us.</p>
+            </div>
+            <button type="button" class="modal-close" onclick="document.getElementById('feedbackModal').classList.add('hidden'); document.body.classList.remove('modal-open');">&times;</button>
+        </div>
+        <form action="<?php echo app_url('student/submit_feedback.php'); ?>" method="POST" class="modal-form">
+            <label class="modal-label" for="feedbackCategory">Category</label>
+            <select name="category" id="feedbackCategory" class="feedback-category-select" required>
+                <option value="">Select a category</option>
+                <option value="General">General</option>
+                <option value="Bug Report">Bug Report</option>
+                <option value="Feature Request">Feature Request</option>
+                <option value="Complaint">Complaint</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <label class="modal-label" for="feedbackMessage">Message</label>
+            <textarea name="message" id="feedbackMessage" placeholder="Write your feedback here..." required maxlength="2000"></textarea>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('feedbackModal').classList.add('hidden'); document.body.classList.remove('modal-open');">Cancel</button>
+                <button type="submit" class="btn-primary">Submit Feedback</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="<?php echo asset_url('Scripts/script.js'); ?>"></script>
 </body>
 </html>

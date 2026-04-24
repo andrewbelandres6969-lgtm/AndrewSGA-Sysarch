@@ -1,15 +1,10 @@
 <?php
-session_start();
-include "config.php";
+require_once "../includes/app.php";
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: index.php?error=Unauthorized");
-    exit();
-}
+require_role('admin');
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    header("Location: admin_dashboard.php?error=Invalid request");
-    exit();
+    redirect_with_message('admin/admin_dashboard.php', 'error', 'Invalid request');
 }
 
 $id = intval($_POST['id']);
@@ -23,17 +18,15 @@ $record_stmt->execute();
 $record = $record_stmt->get_result()->fetch_assoc();
 
 if (!$record) {
-    header("Location: admin_dashboard.php?error=Record not found");
-    exit();
+    redirect_with_message('admin/admin_dashboard.php', 'error', 'Record not found');
 }
 
-$settings = $conn->query("SELECT sitin_time_limit_minutes FROM settings ORDER BY id DESC LIMIT 1")->fetch_assoc();
+$settings = get_latest_settings($conn);
 $limit = (int)$settings['sitin_time_limit_minutes'];
 
 if ($action === 'approve') {
     if ($computer_number === '') {
-        header("Location: admin_dashboard.php?error=Computer number is required for approval");
-        exit();
+        redirect_with_message('admin/admin_dashboard.php', 'error', 'Computer number is required for approval');
     }
 
     $user_stmt = $conn->prepare("SELECT sitin_remaining FROM users WHERE id=?");
@@ -42,8 +35,7 @@ if ($action === 'approve') {
     $user = $user_stmt->get_result()->fetch_assoc();
 
     if ((int)$user['sitin_remaining'] <= 0) {
-        header("Location: admin_dashboard.php?error=Student has no remaining sessions");
-        exit();
+        redirect_with_message('admin/admin_dashboard.php', 'error', 'Student has no remaining sessions');
     }
 
     $stmt = $conn->prepare("
@@ -62,30 +54,25 @@ if ($action === 'approve') {
         $deduct = $conn->prepare("UPDATE users SET sitin_remaining = sitin_remaining - 1 WHERE id=? AND sitin_remaining > 0");
         $deduct->bind_param("i", $record['user_id']);
         $deduct->execute();
-        header("Location: admin_dashboard.php?success=Request approved successfully");
-        exit();
+        redirect_with_message('admin/admin_dashboard.php', 'success', 'Request approved successfully');
     }
 
-    header("Location: admin_dashboard.php?error=Unable to approve request");
-    exit();
+    redirect_with_message('admin/admin_dashboard.php', 'error', 'Unable to approve request');
 }
 
 if ($action === 'reject') {
     $stmt = $conn->prepare("UPDATE sitin_records SET status='Rejected', remarks=? WHERE id=? AND status='Pending'");
     $stmt->bind_param("si", $remarks, $id);
     $stmt->execute();
-    header("Location: admin_dashboard.php?success=Request rejected");
-    exit();
+    redirect_with_message('admin/admin_dashboard.php', 'success', 'Request rejected');
 }
 
 if ($action === 'complete') {
     $stmt = $conn->prepare("UPDATE sitin_records SET status='Completed', time_out=NOW(), remarks=? WHERE id=? AND status='Approved'");
     $stmt->bind_param("si", $remarks, $id);
     $stmt->execute();
-    header("Location: admin_dashboard.php?success=Session completed");
-    exit();
+    redirect_with_message('admin/admin_dashboard.php', 'success', 'Session completed');
 }
 
-header("Location: admin_dashboard.php?error=Invalid action");
-exit();
+redirect_with_message('admin/admin_dashboard.php', 'error', 'Invalid action');
 ?>
